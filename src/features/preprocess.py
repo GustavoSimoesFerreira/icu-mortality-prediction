@@ -14,10 +14,10 @@ from __future__ import annotations
 
 import pandas as pd
 from sklearn.compose import ColumnTransformer
+from sklearn.impute import SimpleImputer
 from sklearn.model_selection import GroupShuffleSplit, train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
-from sklearn.impute import SimpleImputer
 
 
 def apply_filters(df: pd.DataFrame, cfg: dict) -> pd.DataFrame:
