@@ -1,4 +1,4 @@
-# RWE Patient Identification — Life Sciences AI & Advanced Analytics Accelerator
+# ICU Mortality Prediction — Life Sciences AI & Advanced Analytics Accelerator
 
 > An end-to-end, **config-driven accelerator** for healthcare & life-sciences
 > analytics, built around a **rare-disease** use case. It combines classic
@@ -8,7 +8,9 @@
 > output — all with fairness auditing and model governance baked in.
 >
 > ⚠️ **Research / portfolio use only.** Not a medical device, not clinical
-> advice. Patient-level data is **synthetic** (Synthea) unless otherwise noted.
+> advice. Tabular modeling uses the **Open Access** PhysioNet Indwelling Arterial
+> Catheter dataset (de-identified); other modules use synthetic data. No patient
+> data is committed to this repo.
 
 ![Python](https://img.shields.io/badge/python-3.11-blue)
 ![SQL](https://img.shields.io/badge/SQL-DuckDB%20%7C%20Spark-orange)
@@ -55,9 +57,10 @@ Each module maps to real life-sciences analytics work:
    patient segments. *(segmentation frameworks)*
 3. **Forecasting** — time-series forecast of diagnosed patient volume.
    *(forecasting solutions)*
-4. **Predictive Risk Model** — gradient-boosted model with SHAP explanations and
-   a subgroup fairness audit. *(predictive modeling, ensemble methods,
-   responsible AI)*
+4. **Predictive Risk Model** — gradient-boosted model predicting **28-day ICU
+   mortality** on the Open Access PhysioNet Indwelling Arterial Catheter dataset,
+   with SHAP explanations and a subgroup fairness audit. *(predictive modeling,
+   ensemble methods, responsible AI)*
 5. **Evidence Assistant (GenAI / RAG)** — retrieval-augmented Q&A over medical
    literature and drug labels, with **citations** and a **groundedness /
    faithfulness** evaluation. *(GenAI, LLMs, RAG, semantic search, model
@@ -95,16 +98,17 @@ Each module maps to real life-sciences analytics work:
 
 | Layer | Source | Access | Notes |
 |-------|--------|--------|-------|
-| Patient-level RWD | **Synthea** (synthetic) | Open | Generates realistic patients for the chosen condition; no credentialing |
-| Tabular benchmark (optional) | Diabetes 130-US Hospitals (UCI) | Open | Extra predictive-modeling baseline |
-| Credentialed RWD (optional) | MIMIC-IV | PhysioNet + CITI | Adds real-data credibility |
+| Tabular RWD (primary) | **PhysioNet Indwelling Arterial Catheter** (`mimic2-iaccd`) | **Open** (ODC-By) | 1,776 ICU patients; 28-day mortality; no credentialing |
+| Tabular benchmark (optional) | Diabetes 130-US Hospitals (UCI) | Open | Alternative predictive-modeling baseline |
+| Synthetic RWD | **Synthea** | Open | For the patient-identification / segmentation modules |
+| Credentialed RWD (optional, not default) | MIMIC-IV | PhysioNet + CITI | Only if you later add real clinical notes |
 | Literature | **PubMed** abstracts (NCBI E-utilities) | Open API | RAG corpus |
 | Drug labels | **openFDA** / DailyMed | Open API | RAG corpus |
 | Trials | **ClinicalTrials.gov** API | Open API | RAG corpus (check current API version) |
 | Imaging (optional) | MIMIC-CXR / CheXpert | Credentialed / Open | Only for clinical-imaging variant |
 
-> No real patient data is committed to this repo. Synthetic data is generated
-> locally from a config.
+> No patient data is committed to this repo. The PhysioNet dataset is downloaded
+> locally into gitignored `data/`; synthetic data is generated from a config.
 
 ## Tech Stack (100% free & local)
 
@@ -137,9 +141,8 @@ PhysioNet's zero-data-retention policy for credentialed data (see
 Prioritized for the target role — you do **not** need every module. The top four
 close the most job-specific gaps.
 
-- [ ] **P0 — Accelerator scaffold:** config-driven repo, SQL/Spark data layer, CI.
-- [ ] **P0 — Predictive core:** patient-identification classifier + SHAP +
-      fairness audit.
+- [x] **P0 — Accelerator scaffold:** config-driven repo, CI, tests.
+- [x] **P0 — Predictive core:** risk model (LogReg + XGBoost) + SHAP + fairness audit.
 - [ ] **P1 — Evidence Assistant (RAG):** semantic search + cited answers +
       groundedness eval.
 - [ ] **P1 — Agentic workflow:** orchestrate model + RAG + report generation.
@@ -172,12 +175,14 @@ example RAG answers with citations.
 
 ## Responsible AI & Governance
 
-- **Fairness audit** across age / sex / (synthetic) subgroups.
+- **Fairness audit** across age and sex subgroups (race is not available in this dataset).
 - **Interpretability:** SHAP (tabular), source citations (RAG).
-- **Leakage control:** patient-level and temporal splits.
+- **Leakage control:** patient-level splits; outcome/censoring columns excluded from features.
 - **Governance:** model card per model, **data-drift** check (e.g. Evidently),
   and a short responsible-AI / evaluation policy doc.
-- **Privacy:** synthetic data by default; no PHI in the repo.
+- **Privacy:** de-identified Open Access data; synthetic elsewhere; no PHI in the repo.
+- **Attribution (ODC-By):** cite Raffa, J. (2016), *Clinical data from the MIMIC-II
+  database for a case study on indwelling arterial catheters*, PhysioNet.
 - **Credentialed-data / LLM policy:** when a module touches credentialed data
   (e.g. MIMIC), PhysioNet's responsible-use policy applies — credentialed data
   must **not** be sent to third-party LLM APIs without a zero-data-retention
@@ -187,7 +192,6 @@ example RAG answers with citations.
   [responsible use of LLMs](https://physionet.org/news/post/llm-responsible-use/).
 
 ## Project Structure
-> Target structure. Current progress: Step 1 (data loading) — see the Roadmap above.
 
 ```
 rwe-patient-identification/
@@ -213,13 +217,21 @@ rwe-patient-identification/
 ## Getting Started
 
 ```bash
-git clone https://github.com/GustavoSimoesFerreira/rwe-patient-identification.git
+git clone https://github.com/<your-username>/rwe-patient-identification.git
 cd rwe-patient-identification
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 
-# 1. Generate synthetic patients for the configured condition
+# 1. Download the Open Access PhysioNet dataset (see Data Sources) into data/raw/,
+#    then load & explore it:
 python -m src.data.load_diabetes --config configs/data.yaml
+
+# 2. Train & evaluate the risk model (LogReg + XGBoost, SHAP, fairness):
+python -m src.models.train --config configs/model.yaml
+
+# Later-stage modules (roadmap):
+#   python -m src.rag.ingest      (RAG evidence assistant)
+#   python -m src.agent.run       (agentic workflow)
 ```
 
 ## Live Demo
@@ -230,9 +242,9 @@ explanation, plus an evidence-backed summary generated by the agent.
 
 ## Limitations
 
-- Patient data is **synthetic** — results illustrate methodology, not real-world
-  performance.
-- Not validated on real cohorts; **research/educational use only**.
+- The tabular cohort is small (~1,776 patients) and single-center ICU data —
+  results illustrate methodology, not generalizable performance.
+- Not validated for clinical use; **research/educational use only**.
 - LLM outputs can be wrong; the RAG layer mitigates but does not eliminate this.
 
 ## License
