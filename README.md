@@ -1,160 +1,113 @@
-# ICU Mortality Prediction — Life Sciences AI & Advanced Analytics Accelerator
+# ICU Mortality Prediction & Clinical Evidence Assistant
 
-> An end-to-end, **config-driven accelerator** for healthcare & life-sciences
-> analytics, built around a **rare-disease** use case. It combines classic
-> **predictive modeling** (patient risk, identification, segmentation,
-> forecasting) with a **Generative-AI evidence layer** (RAG + semantic search)
-> and an **agentic workflow** that ties them together into a stakeholder-ready
-> output — all with fairness auditing and model governance baked in.
->
-> ⚠️ **Research / portfolio use only.** Not a medical device, not clinical
-> advice. Tabular modeling uses the **Open Access** PhysioNet Indwelling Arterial
-> Catheter dataset (de-identified); other modules use synthetic data. No patient
-> data is committed to this repo.
+An end-to-end, **100% free and local** healthcare-AI project with two pillars:
 
-![Python](https://img.shields.io/badge/python-3.14-blue)
-![SQL](https://img.shields.io/badge/SQL-DuckDB%20%7C%20Spark-orange)
-![GenAI](https://img.shields.io/badge/GenAI-RAG%20%2B%20Agents-8A2BE2)
+1. a **predictive risk model** for 28-day ICU mortality (with interpretability,
+   calibration, and a fairness audit), and
+2. a **RAG evidence assistant** that answers clinical questions from real PubMed
+   literature, with citations and a groundedness evaluation.
+
+Together they cover both classic predictive modeling and modern GenAI (LLMs,
+retrieval-augmented generation, semantic search) — using only open data and
+locally-run models.
+
+> ⚠️ **Research / portfolio use only.** Not a medical device and not clinical
+> advice. Tabular data is the **Open Access** PhysioNet Indwelling Arterial
+> Catheter dataset (de-identified). No patient data is committed to this repo.
+
+![Python](https://img.shields.io/badge/python-3.11%2B-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
+![GenAI](https://img.shields.io/badge/GenAI-RAG%20%2B%20local%20LLM-8A2BE2)
 ![CI](https://img.shields.io/badge/CI-github--actions-blue)
 
 ---
 
-## Why this project
-
-Life-sciences analytics teams don't just build one model — they build
-**reusable assets** that turn clinical, commercial, and real-world-evidence
-(RWE) questions into scalable, production-ready solutions. This repo is designed
-as exactly that: a modular **accelerator** where each capability is independent,
-config-driven, and reusable across therapeutic areas.
-
-The demonstration therapeutic area is a **rare disease** (swappable via config),
-chosen because it showcases the industry-critical problem of **patient
-identification** — finding likely under-diagnosed patients hidden in real-world
-data.
-
 ## Table of Contents
-- [Capabilities](#capabilities)
+- [What's inside](#whats-inside)
+- [Skills demonstrated](#skills-demonstrated)
 - [Architecture](#architecture)
 - [Data Sources](#data-sources)
-- [Roadmap (by priority)](#roadmap-by-priority)
+- [Tech Stack (free & local)](#tech-stack-free--local)
 - [Results](#results)
 - [Responsible AI & Governance](#responsible-ai--governance)
 - [Project Structure](#project-structure)
 - [Getting Started](#getting-started)
-- [Live Demo](#live-demo)
+- [Roadmap](#roadmap)
 - [Limitations](#limitations)
-- [License](#license)
+- [License & Attribution](#license--attribution)
 
-## Capabilities
+## What's inside
 
-Each module maps to real life-sciences analytics work:
+**1. Risk model — 28-day ICU mortality.** A logistic-regression baseline and an
+XGBoost model trained on de-identified ICU data, with median/most-frequent
+imputation, patient-level train/test splitting, SHAP explanations, a calibration
+analysis, and a subgroup fairness audit.
 
-1. **Patient Identification** — combine clinical rules with an ML classifier to
-   flag likely under-diagnosed patients from RWD. *(clinical rules → scalable
-   solution)*
-2. **Patient Segmentation** — unsupervised clustering to build data-driven
-   patient segments. *(segmentation frameworks)*
-3. **Forecasting** — time-series forecast of diagnosed patient volume.
-   *(forecasting solutions)*
-4. **Predictive Risk Model** — gradient-boosted model predicting **28-day ICU
-   mortality** on the Open Access PhysioNet Indwelling Arterial Catheter dataset,
-   with SHAP explanations and a subgroup fairness audit. *(predictive modeling,
-   ensemble methods, responsible AI)*
-5. **Evidence Assistant (GenAI / RAG)** — retrieval-augmented Q&A over medical
-   literature and drug labels, with **citations** and a **groundedness /
-   faithfulness** evaluation. *(GenAI, LLMs, RAG, semantic search, model
-   evaluation)*
-6. **Agentic Workflow** — an agent that orchestrates the pipeline: run the risk
-   model → retrieve supporting evidence → generate a structured summary for a
-   stakeholder. *(Agentic AI, workflow automation, operationalization)*
-7. **Data & Platform Layer** — SQL (DuckDB) + a PySpark pipeline, optionally run
-   on Databricks. *(Python + SQL, distributed computing, data platforms)*
-8. **Governance Layer** — model cards, data-drift monitoring, and a responsible-
-   AI note. *(model evaluation, monitoring, and governance)*
+**2. Evidence assistant — clinical RAG.** Fetches abstracts from PubMed, embeds
+and indexes them locally, retrieves the most relevant passages for a question,
+and asks a **local LLM (Ollama)** to answer *with inline citations*. A
+groundedness evaluation checks whether answers are actually supported by the
+retrieved sources.
+
+## Skills demonstrated
+
+| Area | In this project |
+|------|-----------------|
+| Predictive modeling | Logistic regression + XGBoost on real-world clinical data |
+| Imbalanced evaluation | AUROC, **AUPRC**, Brier score, calibration curves |
+| Interpretability | SHAP (feature attributions) |
+| Responsible AI | Subgroup fairness audit; leakage control; governance notes |
+| GenAI / LLMs | Retrieval-augmented generation with a locally-run LLM |
+| Semantic search | Embedding-based retrieval over a PubMed corpus |
+| Model evaluation | Groundedness / faithfulness scoring of generated answers |
+| Engineering | Config-driven, tested (pytest), linted (ruff), CI on GitHub Actions |
 
 ## Architecture
 
 ```
-                       ┌─────────────────────────┐
-   Synthetic RWD  ─────▶  Data & Platform Layer   │  (SQL / PySpark, config-driven)
-   (Synthea)           └───────────┬─────────────┘
-                                   │
-        ┌──────────────┬───────────┼───────────┬──────────────┐
-        ▼              ▼           ▼           ▼              ▼
-   Patient ID     Segmentation  Forecasting  Risk Model   (features shared)
-        │              │           │           │
-        └──────────────┴─────┬─────┴───────────┘
-                             ▼
-                    ┌──────────────────┐      ┌───────────────────────┐
-                    │  Agentic Workflow │◀────▶│  Evidence Assistant   │
-                    │  (LangGraph)      │      │  (RAG + Semantic Search│
-                    └────────┬─────────┘       │  over PubMed/openFDA)  │
-                             ▼                 └───────────────────────┘
-                    Stakeholder Report  ──▶  FastAPI + Streamlit demo
+  PhysioNet ICU data ──▶ preprocessing ──▶ LogReg / XGBoost ──▶ SHAP + calibration
+  (Open Access)          (impute, split)                    └─▶ fairness audit
+                                                                       │
+                                                                       ▼
+                                                                 metrics + figures
+
+  PubMed abstracts ──▶ chunk ──▶ embed (Ollama) ──▶ vector store ──▶ retrieve top-k
+  (E-utilities)                                                            │
+                                                                           ▼
+                                                    local LLM (Ollama) ──▶ cited answer
+                                                                           │
+                                                                           ▼
+                                                                 groundedness eval
 ```
 
 ## Data Sources
 
-| Layer | Source | Access | Notes |
-|-------|--------|--------|-------|
-| Tabular RWD (primary) | **PhysioNet Indwelling Arterial Catheter** (`mimic2-iaccd`) | **Open** (ODC-By) | 1,776 ICU patients; 28-day mortality; no credentialing |
-| Tabular benchmark (optional) | Diabetes 130-US Hospitals (UCI) | Open | Alternative predictive-modeling baseline |
-| Synthetic RWD | **Synthea** | Open | For the patient-identification / segmentation modules |
-| Credentialed RWD (optional, not default) | MIMIC-IV | PhysioNet + CITI | Only if you later add real clinical notes |
-| Literature | **PubMed** abstracts (NCBI E-utilities) | Open API | RAG corpus |
-| Drug labels | **openFDA** / DailyMed | Open API | RAG corpus |
-| Trials | **ClinicalTrials.gov** API | Open API | RAG corpus (check current API version) |
-| Imaging (optional) | MIMIC-CXR / CheXpert | Credentialed / Open | Only for clinical-imaging variant |
+| Purpose | Source | Access |
+|---------|--------|--------|
+| Tabular ICU data | **PhysioNet Indwelling Arterial Catheter** (`mimic2-iaccd`) | **Open** (ODC-By) — 1,776 patients, no credentialing |
+| RAG corpus | **PubMed** abstracts (NCBI E-utilities) | Open API |
 
-> No patient data is committed to this repo. The PhysioNet dataset is downloaded
-> locally into gitignored `data/`; synthetic data is generated from a config.
+> No patient data is committed. The PhysioNet CSV is downloaded on demand into
+> gitignored `data/`; the PubMed index is built locally.
 
-## Tech Stack (100% free & local)
+## Tech Stack (free & local)
 
-Every component runs on your own machine at **zero cost** — no paid API keys, no
-cloud bills. Running the LLM locally is not just about cost: it also satisfies
-PhysioNet's zero-data-retention policy for credentialed data (see
-[Governance](#responsible-ai--governance)).
+Everything runs on your machine at **zero cost** — no paid APIs, no cloud bills.
+Running the LLM locally also means no data leaves the machine.
 
-| Layer | Tool | Cost |
-|-------|------|------|
-| LLM (RAG + agent) | Ollama + an open model (Llama / Mistral / Qwen) | Free, local |
-| Embeddings | sentence-transformers (Hugging Face) | Free, local |
-| Vector store | FAISS or Chroma | Free, local |
-| Agent orchestration | LangGraph / LlamaIndex | Free (OSS) |
-| SQL | DuckDB | Free, local |
-| Distributed processing | PySpark (local mode) | Free |
-| Experiment tracking | MLflow (self-hosted) | Free, local |
-| Drift monitoring | Evidently | Free (OSS) |
-| Demo / UI | Streamlit / Gradio | Free (OSS) |
-| Demo hosting (optional) | Hugging Face Spaces (CPU tier) | Free |
-| Heavy compute (optional) | Google Colab / Kaggle notebooks | Free GPU tier |
-
-> **Cost traps to avoid:** commercial LLM/embedding APIs (OpenAI, Anthropic)
-> bill per call — use local models instead. Snowflake is a 30-day trial only;
-> Databricks has a forever-free *Free Edition* but is optional (PySpark covers
-> distributed computing locally).
-
-## Roadmap (by priority)
-
-Prioritized for the target role — you do **not** need every module. The top four
-close the most job-specific gaps.
-
-- [x] **P0 — Accelerator scaffold:** config-driven repo, CI, tests.
-- [x] **P0 — Predictive core:** risk model (LogReg + XGBoost) + SHAP + fairness audit.
-- [ ] **P1 — Evidence Assistant (RAG):** semantic search + cited answers +
-      groundedness eval.
-- [ ] **P1 — Agentic workflow:** orchestrate model + RAG + report generation.
-- [ ] **P2 — Segmentation & Forecasting** modules.
-- [ ] **P2 — Governance:** model cards, drift monitoring, responsible-AI doc.
-- [ ] **P3 — Deployment:** FastAPI + Streamlit demo on Hugging Face Spaces.
-- [ ] **P3 — (Optional) Databricks run** and/or **imaging** module.
+| Layer | Tool |
+|-------|------|
+| Modeling | scikit-learn, XGBoost |
+| Interpretability | SHAP |
+| Embeddings + LLM | **Ollama** (`nomic-embed-text`, `llama3.1`) |
+| Vector search | numpy (cosine similarity) — swappable for Chroma/FAISS |
+| Data / HTTP | pandas, pyarrow, requests |
+| Dev | pytest, ruff, GitHub Actions |
 
 ## Results
 
-Model trained on the PhysioNet Indwelling Arterial Catheter dataset (1,776 ICU
-patients, 15.9% 28-day mortality), evaluated on a held-out test set.
+Trained on the PhysioNet IAC dataset (1,776 ICU patients, **15.9%** 28-day
+mortality), evaluated on a held-out test set.
 
 | Model | AUROC | AUPRC | Brier ↓ | Recall | Precision |
 |-------|-------|-------|---------|--------|-----------|
@@ -162,97 +115,110 @@ patients, 15.9% 28-day mortality), evaluated on a held-out test set.
 | **XGBoost** (selected) | 0.88 | 0.62 | **0.096** | 0.51 | 0.58 |
 
 **XGBoost was selected despite a marginally lower AUROC**, because its
-probabilities are better calibrated (lower Brier score) — in clinical decision
-support, a predicted risk of 40% needs to *mean* 40%, not just rank patients
-correctly.
+probabilities are better calibrated (lower Brier score). In clinical decision
+support, a predicted risk of 40% needs to *mean* 40%, not merely rank patients.
 
 ![SHAP summary](reports/figures/shap_summary.png)
 ![Calibration](reports/figures/calibration.png)
 
-**Interpretability (SHAP):** the top drivers are all legitimate ICU mortality
+**Interpretability (SHAP).** The top drivers are all legitimate ICU mortality
 predictors — patient age, severity scores (SAPS I, SOFA), stroke and respiratory
-failure flags, and renal/inflammatory labs (BUN, WBC). No outcome-derived
-feature appears, supporting that the AUROC reflects real signal, not leakage.
+flags, and renal/inflammatory labs (BUN, WBC). No outcome-derived feature
+appears, which supports that the AUROC reflects real signal rather than leakage.
 
-**Fairness audit:** performance is uneven across age. The model is reliable for
-older patients (age 70–84: AUROC 0.83) but weak at the extremes (age <40: 0.59;
-age 85+: 0.59), driven by very few mortality events in those subgroups. Sexes
-are balanced (0.87 vs 0.88). This limitation is reported rather than hidden.
+**Fairness audit.** Performance is uneven across age: reliable for older patients
+(age 70–84: AUROC 0.83) but weak at the extremes (age <40: 0.59; age 85+: 0.59),
+driven by very few mortality events in those subgroups. Sexes are balanced
+(0.87 vs 0.88). This limitation is reported, not hidden.
+
+**Evidence assistant (RAG).** Example — *"What clinical scores predict ICU
+mortality?"* returns a cited answer naming APACHE II, SAPS III, SOFA, SAPS II and
+OASIS, each tied to a specific PubMed source. A groundedness evaluation over
+sample questions averaged **0.70** — and correctly flagged a low score on a
+question whose answer the corpus did not fully support, demonstrating the
+evaluation catches unsupported (hallucinated) content.
 
 ## Responsible AI & Governance
 
-- **Fairness audit** across age and sex subgroups (race is not available in this dataset).
-- **Interpretability:** SHAP (tabular), source citations (RAG).
-- **Leakage control:** patient-level splits; outcome/censoring columns excluded from features.
-- **Governance:** model card per model, **data-drift** check (e.g. Evidently),
-  and a short responsible-AI / evaluation policy doc.
-- **Privacy:** de-identified Open Access data; synthetic elsewhere; no PHI in the repo.
-- **Attribution (ODC-By):** cite Raffa, J. (2016), *Clinical data from the MIMIC-II
-  database for a case study on indwelling arterial catheters*, PhysioNet.
-- **Credentialed-data / LLM policy:** when a module touches credentialed data
-  (e.g. MIMIC), PhysioNet's responsible-use policy applies — credentialed data
-  must **not** be sent to third-party LLM APIs without a zero-data-retention
-  guarantee. This project therefore routes any credentialed-data step through a
-  **local LLM** (or a ZDR-compliant endpoint), while the open RAG corpus
-  (PubMed, openFDA, ClinicalTrials.gov) has no such restriction. See PhysioNet's
-  [responsible use of LLMs](https://physionet.org/news/post/llm-responsible-use/).
+- **Fairness audit** across age and sex subgroups (race is not in this dataset).
+- **Interpretability:** SHAP for the risk model; inline source citations for RAG.
+- **Leakage control:** patient-level split; outcome/censoring columns excluded
+  from features.
+- **Local-only LLM:** embeddings and generation run on Ollama, so no data is
+  sent to third-party LLM services — consistent with PhysioNet's responsible-use
+  policy for restricted data.
+- **Privacy:** de-identified Open Access data; no PHI committed.
 
 ## Project Structure
 
 ```
-rwe-patient-identification/
-├── configs/             # therapeutic area, data, model configs (YAML)
-├── data/                # (gitignored) generated/synthetic data
+icu-mortality-prediction/
+├── configs/            # data.yaml, model.yaml, rag.yaml
+├── data/               # (gitignored) downloaded data + RAG index
+├── reports/figures/    # SHAP + calibration plots
 ├── src/
-│   ├── data/            # Synthea gen, SQL/Spark loading, splits
-│   ├── patient_id/      # rules + ML classifier
-│   ├── segmentation/    # clustering
-│   ├── forecasting/     # time-series
-│   ├── risk/            # predictive model + SHAP + fairness
-│   ├── rag/             # ingestion, embeddings, retrieval, eval
-│   ├── agent/           # LangGraph orchestration
-│   └── governance/      # model cards, drift monitoring
-├── app/                 # FastAPI + Streamlit demo
-├── tests/               # pytest
-├── .github/workflows/   # CI
+│   ├── data/           # dataset loading & exploration
+│   ├── features/       # preprocessing (impute, encode, patient-level split)
+│   ├── models/         # training: LogReg + XGBoost
+│   ├── evaluation/     # metrics + fairness audit
+│   ├── explain/        # SHAP
+│   └── rag/            # PubMed + Ollama evidence assistant
+├── tests/              # offline unit tests
+├── .github/workflows/  # CI (lint + tests)
 ├── requirements.txt
-├── Dockerfile
 └── README.md
 ```
 
 ## Getting Started
 
 ```bash
-git clone https://github.com/<your-username>/rwe-patient-identification.git
-cd rwe-patient-identification
-python -m venv .venv && source .venv/bin/activate
+# Setup
+python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 
-# 1. Download the Open Access PhysioNet dataset (see Data Sources) into data/raw/,
-#    then load & explore it:
+# 1. Load the ICU dataset (auto-downloads from PhysioNet, then caches)
 python -m src.data.load_diabetes --config configs/data.yaml
 
-# 2. Train & evaluate the risk model (LogReg + XGBoost, SHAP, fairness):
+# 2. Train & evaluate the risk model (LogReg + XGBoost, SHAP, fairness)
 python -m src.models.train --config configs/model.yaml
-
-# Later-stage modules (roadmap):
-#   python -m src.rag.ingest      (RAG evidence assistant)
-#   python -m src.agent.run       (agentic workflow)
 ```
 
-## Live Demo
+**For the RAG assistant**, install [Ollama](https://ollama.com/download) and pull
+the models once:
 
-Streamlit app: enter a synthetic patient, get a risk score with a SHAP
-explanation, plus an evidence-backed summary generated by the agent.
-**[Link once deployed]**
+```bash
+ollama pull nomic-embed-text
+ollama pull llama3.1
+
+# 3. Build the PubMed index, then ask questions
+python -m src.rag.ingest   --config configs/rag.yaml
+python -m src.rag.ask      --config configs/rag.yaml --question "What predicts ICU mortality?"
+python -m src.rag.evaluate --config configs/rag.yaml
+```
+
+> Set your contact email in `configs/rag.yaml` (`pubmed.email`) before ingesting —
+> NCBI requests it.
+
+## Roadmap
+
+- [x] Data loading & exploration
+- [x] Risk model (LogReg + XGBoost) with SHAP, calibration, fairness
+- [x] RAG evidence assistant with groundedness evaluation
+- [ ] Agentic workflow tying the risk model + evidence retrieval into one report
+- [ ] Streamlit demo deployed to Hugging Face Spaces
 
 ## Limitations
 
-- The tabular cohort is small (~1,776 patients) and single-center ICU data —
-  results illustrate methodology, not generalizable performance.
-- Not validated for clinical use; **research/educational use only**.
-- LLM outputs can be wrong; the RAG layer mitigates but does not eliminate this.
+- The cohort is small (~1,776 patients) and single-center ICU data — results
+  illustrate methodology, not generalizable performance.
+- RAG answer quality depends on corpus coverage; the groundedness score exposes
+  when a question isn't well supported.
+- Not validated for clinical use; **research/educational only**.
 
-## License
+## License & Attribution
 
-MIT — see [LICENSE](LICENSE).
+Code released under the **MIT License** (see `LICENSE`).
+
+The PhysioNet Indwelling Arterial Catheter dataset is licensed **ODC-By** and
+requires attribution: Raffa, J. (2016), *Clinical data from the MIMIC-II
+database for a case study on indwelling arterial catheters*, PhysioNet.
