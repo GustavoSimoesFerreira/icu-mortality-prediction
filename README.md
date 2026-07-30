@@ -213,7 +213,7 @@ rwe-patient-identification/
 ## Getting Started
 
 ```bash
-git clone https://github.com/<your-username>/rwe-patient-identification.git
+git clone https://github.com/GustavoSimoesFerreira/rwe-patient-identification.git
 cd rwe-patient-identification
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
