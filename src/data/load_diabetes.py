@@ -34,74 +34,60 @@ def make_binary_target(series: pd.Series, positive_value: str) -> pd.Series:
     return (series == positive_value).astype(int)
 
 
-def download_dataset(uci_id: int) -> pd.DataFrame:
-    """Fetch the dataset from the UCI ML Repository and return one DataFrame.
+DATA_URL = "https://physionet.org/files/mimic2-iaccd/1.0/full_cohort_data.csv"
 
-    The ucimlrepo package splits the data into ID / feature / target frames;
-    we stitch them back together into a single tidy DataFrame.
+def download_dataset(csv_path: str) -> pd.DataFrame:
+    """Load the Open Access PhysioNet IAC dataset.
+
+    Reads from a local cache if present; otherwise downloads it once from
+    PhysioNet's public URL and caches it. No manual download, no credentialing.
     """
-    try:
-        from ucimlrepo import fetch_ucirepo
-    except ImportError as exc:  # pragma: no cover
-        raise SystemExit(
-            "The 'ucimlrepo' package is missing. Run: pip install -r requirements.txt"
-        ) from exc
+    path = Path(csv_path)
+    if path.exists():
+        return pd.read_csv(path)
 
-    try:
-        dataset = fetch_ucirepo(id=uci_id)
-    except Exception as exc:  # network / UCI availability issues
-        raise SystemExit(
-            f"Could not download dataset id={uci_id} from the UCI repository.\n"
-            f"Check your internet connection and try again.\nOriginal error: {exc}"
-        ) from exc
-
-    frames = [f for f in (dataset.data.ids, dataset.data.features, dataset.data.targets)
-              if f is not None]
-    df = pd.concat(frames, axis=1)
+    print(f"Downloading dataset from {DATA_URL} ...")
+    df = pd.read_csv(DATA_URL)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    df.to_csv(path, index=False)
     return df
 
 
 def clean(df: pd.DataFrame, cfg: dict) -> pd.DataFrame:
-    """Light cleaning: mark missing values and drop unusable columns."""
-    missing_token = cfg["cleaning"]["missing_token"]
-    df = df.replace(missing_token, pd.NA)
+    """Ensure the target is 0/1 and derive an age band for the fairness audit.
 
-    drop_cols = [c for c in cfg["cleaning"].get("drop_columns", []) if c in df.columns]
-    if drop_cols:
-        df = df.drop(columns=drop_cols)
+    This CSV encodes missing values as blank/NA (read as NaN by pandas), so
+    there is no '?' token to replace.
+    """
+    target = cfg["target"]["column"]
+    df[target] = df[target].astype(int)
 
-    # Build the binary target.
-    src = cfg["target"]["source_column"]
-    df[cfg["target"]["binary_column"]] = make_binary_target(
-        df[src], cfg["target"]["positive_value"]
+    # age_band is used only for the fairness audit (age itself stays a feature).
+    df["age_band"] = pd.cut(
+        df["age"],
+        bins=[0, 40, 55, 70, 85, 200],
+        labels=["<40", "40-54", "55-69", "70-84", "85+"],
     )
     return df
 
 
 def summarize(df: pd.DataFrame, cfg: dict) -> None:
     """Print a quick exploratory summary — this is the point of Step 1."""
-    target = cfg["target"]["binary_column"]
+    target = cfg["target"]["column"]
 
     print("\n" + "=" * 60)
-    print("DIABETES 130-US — EXPLORATORY SUMMARY")
+    print(f"{cfg['dataset']['name'].upper()} — EXPLORATORY SUMMARY")
     print("=" * 60)
-    print(f"Rows (hospital encounters): {len(df):,}")
+    print(f"Rows: {len(df):,}")
     print(f"Columns: {df.shape[1]}")
 
-    # Class balance — medical outcomes are usually imbalanced.
     counts = df[target].value_counts().sort_index()
-    print("\nTarget distribution (readmitted within 30 days):")
+    print("\nTarget distribution (28-day mortality):")
     for value, n in counts.items():
-        label = "readmitted <30d" if value == 1 else "not (<30d)"
-        print(f"  {value} = {label:<18} {n:>8,}  ({n / len(df):.1%})")
+        label = "died <=28d" if value == 1 else "survived"
+        print(f"  {value} = {label:<14} {n:>7,}  ({n / len(df):.1%})")
 
-    # Leakage warning: the same patient appears in multiple encounters.
-    if "patient_nbr" in df.columns:
-        n_patients = df["patient_nbr"].nunique()
-        print(f"\nUnique patients: {n_patients:,}  (vs {len(df):,} encounters)")
-        print("  --> For Step 2, split at the PATIENT level to avoid leakage.")
-
-    # Missingness — helps decide what to impute or drop later.
+    # Missingness
     miss = (df.isna().mean().sort_values(ascending=False) * 100).round(1)
     top_missing = miss[miss > 0].head(8)
     if len(top_missing):
@@ -118,8 +104,8 @@ def main() -> None:
 
     cfg = load_config(args.config)
 
-    print(f"Downloading dataset id={cfg['dataset']['uci_id']} from UCI...")
-    df = download_dataset(cfg["dataset"]["uci_id"])
+    print(f"Loading dataset '{cfg['dataset']['name']}' ...")
+    df = download_dataset(cfg["dataset"]["raw_file"])
     df = clean(df, cfg)
     summarize(df, cfg)
 
