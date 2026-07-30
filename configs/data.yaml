@@ -1,21 +1,9 @@
-# Configuration for the Step 1 dataset (UCI Diabetes 130-US Hospitals).
-# Keeping settings in config (not hard-coded) makes the pipeline reusable.
-
 dataset:
-  name: diabetes_130_us
-  uci_id: 296                 # UCI ML Repository id for "Diabetes 130-US Hospitals"
+  name: iac_mortality
+  raw_file: data/raw/full_cohort_data.csv
 
 target:
-  source_column: readmitted   # original values: '<30', '>30', 'NO'
-  positive_value: "<30"       # we predict readmission WITHIN 30 days
-  binary_column: readmitted_30d
-
-cleaning:
-  missing_token: "?"          # this dataset encodes missing values as '?'
-  drop_columns:               # columns dropped up front (too sparse / not useful)
-    - weight                  # ~97% missing
-    - payer_code
-    - medical_specialty
+  column: day_28_flg
 
 paths:
   raw_dir: data/raw

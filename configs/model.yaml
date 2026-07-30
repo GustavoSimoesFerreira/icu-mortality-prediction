@@ -1,0 +1,50 @@
+input:
+  processed_file: data/processed/diabetes.parquet
+
+target:
+  column: day_28_flg
+
+patient:
+  id_column: patient_nbr
+  dedup_first_encounter: false
+
+filters:
+  discharge_column: discharge_disposition_id
+  exclude_discharge_ids: []
+
+features:
+  drop_columns:
+    - hosp_exp_flg
+    - icu_exp_flg
+    - mort_day_censored
+    - censor_flg
+    - hospital_los_day
+    - icu_los_day
+    - age_band
+  max_onehot_categories: 20
+
+split:
+  test_size: 0.2
+  random_state: 42
+
+model:
+  xgboost:
+    n_estimators: 300
+    max_depth: 5
+    learning_rate: 0.05
+    subsample: 0.9
+    colsample_bytree: 0.9
+
+evaluation:
+  threshold: 0.5
+
+fairness:
+  group_columns: [gender_num, age_band]
+
+explain:
+  sample_size: 2000
+
+paths:
+  reports_dir: reports
+  figures_dir: reports/figures
+  metrics_file: reports/metrics.json
