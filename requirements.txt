@@ -1,0 +1,15 @@
+# --- Step 0 / Step 1: data loading & exploration ---
+ucimlrepo>=0.0.7      # fetches the UCI Diabetes 130-US dataset
+pandas>=2.0
+numpy>=1.24
+pyarrow>=14.0         # parquet support
+pyyaml>=6.0
+matplotlib>=3.7
+seaborn>=0.12
+jupyter>=1.0
+
+# --- Dev tooling ---
+pytest>=8.0
+ruff>=0.5
+
+# NOTE: modeling libraries (scikit-learn, xgboost, shap, ...) are added in Step 2.
