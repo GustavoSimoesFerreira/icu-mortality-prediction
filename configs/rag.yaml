@@ -1,0 +1,29 @@
+# Configuration for the RAG Evidence Assistant.
+
+pubmed:
+  query: "ICU mortality prediction critical care severity score"
+  retmax: 100                       # number of abstracts to fetch
+  email: "your-email@example.com"   # NCBI asks for a contact email (be polite)
+
+chunking:
+  chunk_size: 800     # characters per chunk
+  overlap: 150        # overlap between consecutive chunks
+
+ollama:
+  host: "http://localhost:11434"
+  embed_model: "nomic-embed-text"   # ollama pull nomic-embed-text
+  gen_model: "llama3.1"             # ollama pull llama3.1  (or qwen2.5, mistral, ...)
+  timeout: 120
+
+retrieval:
+  top_k: 4            # number of chunks passed to the LLM as context
+
+paths:
+  index_file: data/rag/index.npz
+  docs_file: data/rag/docs.json
+
+evaluation:
+  questions:
+    - "What clinical scores are used to predict mortality in the ICU?"
+    - "Is the SOFA score associated with mortality in critically ill patients?"
+    - "How does age relate to ICU mortality risk?"
