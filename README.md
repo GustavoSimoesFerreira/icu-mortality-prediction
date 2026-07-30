@@ -12,7 +12,7 @@
 > Catheter dataset (de-identified); other modules use synthetic data. No patient
 > data is committed to this repo.
 
-![Python](https://img.shields.io/badge/python-3.11-blue)
+![Python](https://img.shields.io/badge/python-3.14-blue)
 ![SQL](https://img.shields.io/badge/SQL-DuckDB%20%7C%20Spark-orange)
 ![GenAI](https://img.shields.io/badge/GenAI-RAG%20%2B%20Agents-8A2BE2)
 ![License](https://img.shields.io/badge/license-MIT-green)
@@ -153,25 +153,31 @@ close the most job-specific gaps.
 
 ## Results
 
-> Fill in per module, on held-out, patient-level splits.
+Model trained on the PhysioNet Indwelling Arterial Catheter dataset (1,776 ICU
+patients, 15.9% 28-day mortality), evaluated on a held-out test set.
 
-**Risk / Patient-ID model**
+| Model | AUROC | AUPRC | Brier ↓ | Recall | Precision |
+|-------|-------|-------|---------|--------|-----------|
+| Logistic Regression | 0.90 | 0.65 | 0.127 | 0.84 | 0.46 |
+| **XGBoost** (selected) | 0.88 | 0.62 | **0.096** | 0.51 | 0.58 |
 
-| Model | AUROC | AUPRC | Brier ↓ | Recall @ fixed FPR |
-|-------|-------|-------|---------|--------------------|
-| Logistic Regression | — | — | — | — |
-| XGBoost | — | — | — | — |
+**XGBoost was selected despite a marginally lower AUROC**, because its
+probabilities are better calibrated (lower Brier score) — in clinical decision
+support, a predicted risk of 40% needs to *mean* 40%, not just rank patients
+correctly.
 
-**Evidence Assistant (RAG)**
+![SHAP summary](reports/figures/shap_summary.png)
+![Calibration](reports/figures/calibration.png)
 
-| Metric | Score |
-|--------|-------|
-| Retrieval hit-rate @k | — |
-| Faithfulness / groundedness | — |
-| Answer relevance | — |
+**Interpretability (SHAP):** the top drivers are all legitimate ICU mortality
+predictors — patient age, severity scores (SAPS I, SOFA), stroke and respiratory
+failure flags, and renal/inflammatory labs (BUN, WBC). No outcome-derived
+feature appears, supporting that the AUROC reflects real signal, not leakage.
 
-Include: PR & calibration curves, SHAP summary, subgroup fairness table, and
-example RAG answers with citations.
+**Fairness audit:** performance is uneven across age. The model is reliable for
+older patients (age 70–84: AUROC 0.83) but weak at the extremes (age <40: 0.59;
+age 85+: 0.59), driven by very few mortality events in those subgroups. Sexes
+are balanced (0.87 vs 0.88). This limitation is reported rather than hidden.
 
 ## Responsible AI & Governance
 

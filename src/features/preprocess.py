@@ -17,6 +17,7 @@ from sklearn.compose import ColumnTransformer
 from sklearn.model_selection import GroupShuffleSplit, train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.impute import SimpleImputer
 
 
 def apply_filters(df: pd.DataFrame, cfg: dict) -> pd.DataFrame:
@@ -84,19 +85,24 @@ def train_test_split_patient(x_raw, y, groups, df, cfg):
 
 
 def build_preprocessor(x_raw: pd.DataFrame, cfg: dict) -> ColumnTransformer:
-    """One-hot encode categoricals (cardinality-capped) and scale numerics."""
+    """Impute missing values, then encode categoricals and scale numerics."""
     numeric_cols = x_raw.select_dtypes(include="number").columns.tolist()
     categorical_cols = [c for c in x_raw.columns if c not in numeric_cols]
 
     max_cats = cfg["features"].get("max_onehot_categories")
+
+    numeric = Pipeline(steps=[
+        ("impute", SimpleImputer(strategy="median")),
+        ("scale", StandardScaler()),
+    ])
     categorical = Pipeline(steps=[
+        ("impute", SimpleImputer(strategy="most_frequent")),
         ("onehot", OneHotEncoder(
             handle_unknown="infrequent_if_exist",
             max_categories=max_cats,
             sparse_output=False,
         )),
     ])
-    numeric = Pipeline(steps=[("scale", StandardScaler())])
 
     return ColumnTransformer(
         transformers=[

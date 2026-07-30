@@ -1,0 +1,75 @@
+{
+  "metrics": {
+    "logistic_regression": {
+      "auroc": 0.9005,
+      "auprc": 0.6471,
+      "brier": 0.1267,
+      "recall": 0.8421,
+      "specificity": 0.8094,
+      "precision": 0.4571,
+      "positive_rate": 0.2949
+    },
+    "xgboost": {
+      "auroc": 0.8801,
+      "auprc": 0.6221,
+      "brier": 0.0957,
+      "recall": 0.5088,
+      "specificity": 0.9298,
+      "precision": 0.58,
+      "positive_rate": 0.1404
+    }
+  },
+  "fairness": [
+    {
+      "attribute": "gender_num",
+      "group": "0.0",
+      "n": 142,
+      "positive_rate": 0.2042,
+      "auroc": 0.8694
+    },
+    {
+      "attribute": "gender_num",
+      "group": "1.0",
+      "n": 214,
+      "positive_rate": 0.1308,
+      "auroc": 0.8821
+    },
+    {
+      "attribute": "age_band",
+      "group": "40-54",
+      "n": 84,
+      "positive_rate": 0.0714,
+      "auroc": 0.7415
+    },
+    {
+      "attribute": "age_band",
+      "group": "55-69",
+      "n": 64,
+      "positive_rate": 0.1406,
+      "auroc": 0.7556
+    },
+    {
+      "attribute": "age_band",
+      "group": "70-84",
+      "n": 72,
+      "positive_rate": 0.375,
+      "auroc": 0.8296
+    },
+    {
+      "attribute": "age_band",
+      "group": "85+",
+      "n": 28,
+      "positive_rate": 0.5,
+      "auroc": 0.5867
+    },
+    {
+      "attribute": "age_band",
+      "group": "<40",
+      "n": 108,
+      "positive_rate": 0.0093,
+      "auroc": 0.5888
+    }
+  ],
+  "n_train": 1420,
+  "n_test": 356
+}

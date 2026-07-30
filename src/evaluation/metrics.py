@@ -51,7 +51,7 @@ def fairness_by_group(y_true, y_prob, groups: pd.DataFrame, group_columns) -> pd
     for col in group_columns:
         if col not in groups.columns:
             continue
-        values = groups[col].fillna("Unknown")
+        values = groups[col].astype("object").fillna("Unknown")
         for val, mask in values.groupby(values).groups.items():
             idx = groups.index.get_indexer(mask)
             yt, yp = y_true[idx], y_prob[idx]
