@@ -112,7 +112,7 @@ mortality), evaluated on a held-out test set.
 | Model | AUROC | AUPRC | Brier ↓ | Recall | Precision |
 |-------|-------|-------|---------|--------|-----------|
 | Logistic Regression | 0.90 | 0.65 | 0.127 | 0.84 | 0.46 |
-| **XGBoost** (selected) | 0.88 | 0.62 | **0.096** | 0.51 | 0.58 |
+| **XGBoost** (F1-tuned) | 0.89 | 0.63 | 0.095 | 0.58 | 0.62 |
 
 **XGBoost was selected despite a marginally lower AUROC**, because its
 probabilities are better calibrated (lower Brier score). In clinical decision
@@ -122,14 +122,15 @@ support, a predicted risk of 40% needs to *mean* 40%, not merely rank patients.
 ![Calibration](reports/figures/calibration.png)
 
 **Interpretability (SHAP).** The top drivers are all legitimate ICU mortality
-predictors — patient age, severity scores (SAPS I, SOFA), stroke and respiratory
-flags, and renal/inflammatory labs (BUN, WBC). No outcome-derived feature
-appears, which supports that the AUROC reflects real signal rather than leakage.
+predictors — patient age, stroke, severity scores (SAPS I, SOFA), fluid administration,
+and inflammatory labs (WBC). No outcome-derived feature appears, supporting that the
+AUROC reflects real signal, not leakage.
 
-**Fairness audit.** Performance is uneven across age: reliable for older patients
-(age 70–84: AUROC 0.83) but weak at the extremes (age <40: 0.59; age 85+: 0.59),
-driven by very few mortality events in those subgroups. Sexes are balanced
-(0.87 vs 0.88). This limitation is reported, not hidden.
+**Fairness audit.** Performance is fairly consistent across age after tuning
+(AUROC 0.76–0.83 for most groups), with the oldest patients (age 85+: 0.65)
+remaining the weakest subgroup — expected, given only 28 such patients. Sexes
+are balanced (0.88 vs 0.88). Notably, F1-based tuning also improved the youngest
+group (age <40) from 0.44 to 0.77. This limitation is reported, not hidden.
 
 **Evidence assistant (RAG).** Example — *"What clinical scores predict ICU
 mortality?"* returns a cited answer naming APACHE II, SAPS III, SOFA, SAPS II and

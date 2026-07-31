@@ -10,13 +10,13 @@
       "positive_rate": 0.2949
     },
     "xgboost": {
-      "auroc": 0.8801,
-      "auprc": 0.6221,
-      "brier": 0.0957,
-      "recall": 0.5088,
-      "specificity": 0.9298,
-      "precision": 0.58,
-      "positive_rate": 0.1404
+      "auroc": 0.8855,
+      "auprc": 0.6296,
+      "brier": 0.0947,
+      "recall": 0.5789,
+      "specificity": 0.9331,
+      "precision": 0.6226,
+      "positive_rate": 0.1489
     }
   },
   "fairness": [
@@ -25,49 +25,49 @@
       "group": "0.0",
       "n": 142,
       "positive_rate": 0.2042,
-      "auroc": 0.8694
+      "auroc": 0.8877
     },
     {
       "attribute": "gender_num",
       "group": "1.0",
       "n": 214,
       "positive_rate": 0.1308,
-      "auroc": 0.8821
+      "auroc": 0.8785
     },
     {
       "attribute": "age_band",
       "group": "40-54",
       "n": 84,
       "positive_rate": 0.0714,
-      "auroc": 0.7415
+      "auroc": 0.7692
     },
     {
       "attribute": "age_band",
       "group": "55-69",
       "n": 64,
       "positive_rate": 0.1406,
-      "auroc": 0.7556
+      "auroc": 0.7596
     },
     {
       "attribute": "age_band",
       "group": "70-84",
       "n": 72,
       "positive_rate": 0.375,
-      "auroc": 0.8296
+      "auroc": 0.8305
     },
     {
       "attribute": "age_band",
       "group": "85+",
       "n": 28,
       "positive_rate": 0.5,
-      "auroc": 0.5867
+      "auroc": 0.648
     },
     {
       "attribute": "age_band",
       "group": "<40",
       "n": 108,
       "positive_rate": 0.0093,
-      "auroc": 0.5888
+      "auroc": 0.7664
     }
   ],
   "n_train": 1420,
