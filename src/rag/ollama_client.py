@@ -1,4 +1,4 @@
-"""Minimal client for a local Ollama server (embeddings + chat).
+"""Minimal client for a local Ollama server (embeddings + chat + tool calling).
 
 Ollama runs locally and exposes an HTTP API. Using it for both embeddings and
 generation keeps the pipeline free, private, and dependency-light — no torch,
@@ -54,3 +54,15 @@ class OllamaClient:
             },
         )
         return data["message"]["content"]
+
+    def chat_messages(self, messages: list[dict], tools: list[dict] | None = None) -> dict:
+        """Send a full message list (optionally with tools) and return the reply.
+
+        Returns the raw `message` object so the caller can inspect `tool_calls`.
+        Used by the agent loop.
+        """
+        payload = {"model": self.gen_model, "messages": messages, "stream": False}
+        if tools:
+            payload["tools"] = tools
+        data = self._post("/api/chat", payload)
+        return data["message"]

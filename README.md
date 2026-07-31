@@ -99,7 +99,7 @@ Running the LLM locally also means no data leaves the machine.
 |-------|------|
 | Modeling | scikit-learn, XGBoost |
 | Interpretability | SHAP |
-| Embeddings + LLM | **Ollama** (`nomic-embed-text`, `llama3.1`) |
+| LLM (RAG + agent) | Ollama + an open model (Llama / Mistral / Qwen) | Free, local |
 | Vector search | numpy (cosine similarity) — swappable for Chroma/FAISS |
 | Data / HTTP | pandas, pyarrow, requests |
 | Dev | pytest, ruff, GitHub Actions |
@@ -188,7 +188,7 @@ the models once:
 
 ```bash
 ollama pull nomic-embed-text
-ollama pull llama3.1
+ollama pull qwen2.5
 
 # 3. Build the PubMed index, then ask questions
 python -m src.rag.ingest   --config configs/rag.yaml
@@ -196,6 +196,8 @@ python -m src.rag.ask      --config configs/rag.yaml --question "What predicts I
 python -m src.rag.evaluate --config configs/rag.yaml
 ```
 
+> The agent uses **qwen2.5** (via Ollama) because it handles multi-step tool
+> calling more reliably than smaller local models.
 > Set your contact email in `configs/rag.yaml` (`pubmed.email`) before ingesting —
 > NCBI requests it.
 
