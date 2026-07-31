@@ -1,0 +1,14 @@
+# Configuration for the clinical risk-summary agent.
+# It reuses the Step 2 model config and the Step 3 RAG config.
+
+model_config: configs/model.yaml    # risk model (Step 2)
+rag_config: configs/rag.yaml        # evidence index (Step 3)
+
+risk:
+  model_file: models/risk_pipeline.joblib   # cached trained model (auto-created)
+
+agent:
+  host: "http://localhost:11434"
+  gen_model: "qwen2.5"        # must support tool calling (llama3.1, qwen2.5, ...)
+  timeout: 180
+  max_iterations: 6            # safety cap on the tool-calling loop

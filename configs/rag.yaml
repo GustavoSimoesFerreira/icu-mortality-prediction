@@ -12,7 +12,7 @@ chunking:
 ollama:
   host: "http://localhost:11434"
   embed_model: "nomic-embed-text"   # ollama pull nomic-embed-text
-  gen_model: "llama3.1"             # ollama pull llama3.1  (or qwen2.5, mistral, ...)
+  gen_model: "qwen2.5"             # ollama pull llama3.1  (or qwen2.5, mistral, ...)
   timeout: 120
 
 retrieval:
