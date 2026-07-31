@@ -30,6 +30,8 @@ from app.demo_utils import (
     metrics_at_threshold,
     ollama_available,
 )
+from pathlib import Path
+from src.data.load_diabetes import clean, download_dataset
 from src.features.preprocess import (
     apply_filters,
     build_preprocessor,
@@ -53,9 +55,21 @@ def load_context() -> dict:
 
     with open(MODEL_CFG, encoding="utf-8") as f:
         cfg = yaml.safe_load(f)
-    cfg["input"]["processed_file"] = _abs(cfg["input"]["processed_file"])
+    processed_path = _abs(cfg["input"]["processed_file"])
+    cfg["input"]["processed_file"] = processed_path
 
-    df = pd.read_parquet(cfg["input"]["processed_file"])
+    # On a fresh host (e.g. Streamlit Cloud) the gitignored parquet doesn't exist,
+    # so build it once from the Open Access PhysioNet CSV.
+    if not Path(processed_path).exists():
+        with open(_abs("configs/data.yaml"), encoding="utf-8") as f:
+            data_cfg = yaml.safe_load(f)
+        data_cfg["dataset"]["raw_file"] = _abs(data_cfg["dataset"]["raw_file"])
+        raw = download_dataset(data_cfg["dataset"]["raw_file"])
+        raw = clean(raw, data_cfg)
+        Path(processed_path).parent.mkdir(parents=True, exist_ok=True)
+        raw.to_parquet(processed_path, index=False)
+
+    df = pd.read_parquet(processed_path)
     df = apply_filters(df, cfg)
     df = dedup_first_encounter(df, cfg)
     x_raw, y, groups = split_columns(df, cfg)
