@@ -1,6 +1,6 @@
 # ICU Mortality Prediction — Clinical Risk, Evidence RAG & Agent
 
-🔗 **[Live demo]([https://icu-mortality-prediction.streamlit.app](https://icu-mortality-prediction-r7htks4wtyq38jcmfhi7ef.streamlit.app/))** · [Repository](https://github.com/GustavoSimoesFerreira/icu-mortality-prediction)
+🔗 **[Live demo](https://icu-mortality-prediction-r7htks4wtyq38jcmfhi7ef.streamlit.app/)** · [Repository](https://github.com/GustavoSimoesFerreira/icu-mortality-prediction)
 
 An end-to-end, **100% free and local** healthcare-AI project with three pillars:
 
