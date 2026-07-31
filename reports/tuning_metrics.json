@@ -1,0 +1,14 @@
+{
+  "cv_scoring": "f1",
+  "cv_mean": 0.5359,
+  "cv_std": 0.0577,
+  "test_metrics": {
+    "auroc": 0.8855,
+    "auprc": 0.6296,
+    "brier": 0.0947,
+    "recall": 0.5789,
+    "specificity": 0.9331,
+    "precision": 0.6226,
+    "positive_rate": 0.1489
+  }
+}
