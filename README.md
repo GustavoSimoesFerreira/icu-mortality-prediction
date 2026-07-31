@@ -225,7 +225,7 @@ python -m src.rag.evaluate --config configs/rag.yaml
 - [x] Data loading & exploration
 - [x] Risk model (LogReg + XGBoost) with SHAP, calibration, fairness
 - [x] RAG evidence assistant with groundedness evaluation
-- [ ] Agentic workflow tying the risk model + evidence retrieval into one report
+- [x] Agentic workflow tying the risk model + evidence retrieval into one report
 - [ ] Streamlit demo deployed to Hugging Face Spaces
 
 ## Limitations
