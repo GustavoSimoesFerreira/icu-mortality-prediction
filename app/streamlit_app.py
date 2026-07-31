@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import os
 import sys
+from pathlib import Path
 
 # Make `src` importable regardless of where Streamlit is launched from.
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -30,7 +31,6 @@ from app.demo_utils import (
     metrics_at_threshold,
     ollama_available,
 )
-from pathlib import Path
 from src.data.load_diabetes import clean, download_dataset
 from src.features.preprocess import (
     apply_filters,
