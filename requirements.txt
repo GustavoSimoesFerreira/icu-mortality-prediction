@@ -11,6 +11,7 @@ shap>=0.50
 
 # Visualization
 matplotlib>=3.8
+streamlit>=1.40
 
 # Dev tooling
 pytest>=8.2
