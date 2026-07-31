@@ -139,6 +139,24 @@ sample questions averaged **0.70** — and correctly flagged a low score on a
 question whose answer the corpus did not fully support, demonstrating the
 evaluation catches unsupported (hallucinated) content.
 
+**Operating threshold.** The model outputs probabilities, so the decision
+threshold is a separate, deliberate choice. Because a missed death costs more
+than a false alarm, we favour higher-recall operating points and present two,
+against the default as a baseline:
+
+| Threshold | Recall | Precision | Specificity | Best suited for |
+|-----------|--------|-----------|-------------|-----------------|
+| 0.50 (default baseline) | 0.58 | 0.62 | 0.93 | Off-the-shelf cut-off — misses 42% of deaths, so not ideal for a mortality screen |
+| 0.15 (balanced)         | 0.82 | 0.41 | 0.78 | Keeping high recall while limiting false alarms, when the triggered action is more costly |
+| 0.10 (max sensitivity)  | 0.86 | 0.37 | 0.72 | Catching the most deaths when the triggered action is low-cost (e.g. a nursing re-check) |
+
+![Threshold trade-off](reports/figures/threshold_analysis.png)
+
+Moving from the default 0.50 to 0.10 raises the share of ICU deaths caught from
+58% to 86%, at the cost of lower precision. This separates model *quality* from
+the operating-point *decision* — a clinical judgement about the relative cost of
+false negatives vs false positives.
+
 ## Responsible AI & Governance
 
 - **Fairness audit** across age and sex subgroups (race is not in this dataset).

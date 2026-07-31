@@ -1,0 +1,12 @@
+# Configuration for the operating-threshold analysis.
+
+target_recall: 0.85          # capture at least 85% of true ICU deaths
+
+grid:
+  start: 0.01
+  stop: 0.99
+  step: 0.01
+
+paths:
+  figure_file: reports/figures/threshold_analysis.png
+  results_file: reports/threshold_analysis.json
